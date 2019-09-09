@@ -9,3 +9,8 @@ sites/site*/public/theme/
 textpattern/
 HISTORY.txt
 README.txt
+*.pyc
+/optical_flow/*.pyc
+/resnet/*.pyc
+saved_dataset_raw/
+saved_dataset_of/
