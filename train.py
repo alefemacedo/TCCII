@@ -69,7 +69,9 @@ for imagePath in imagePaths:
 # convert the data and labels to NumPy arrays and get the labels quantity
 data = np.array(data)
 labels = np.array(labels)
-labelsCount = labels.shape[1]
+labelsCount = np.unique(labels, axis=0).size
+print("[INFO] number of classes...")
+print(labelsCount)
 
 # perform one-hot encoding on the labels
 lb = LabelBinarizer()
