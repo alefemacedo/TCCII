@@ -24,9 +24,9 @@ import os
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True,
 	help="path to input dataset")
-ap.add_argument("-m", "--model", required=True, default="./output/behavior.model",
+ap.add_argument("-m", "--model", required=False, default="./output/behavior.model",
 	help="path to output serialized model")
-ap.add_argument("-l", "--label-bin", required=True, default="./output/lb.pickle",
+ap.add_argument("-l", "--label-bin", required=False, default="./output/lb.pickle",
 	help="path to output label binarizer")
 ap.add_argument("-e", "--epochs", type=int, default=25,
 	help="# of epochs to train our network for")
