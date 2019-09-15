@@ -142,7 +142,7 @@ plt.plot(fpr["macro"], tpr["macro"],
 cmap = plt.cm.get_cmap('cool', labelsCount)
 for i in range(labelsCount):
     plt.plot(fpr[i], tpr[i], color=cmap(i), lw=2,
-             label='ROC curve of class {} (area = {1:0.2f})'
+             label='ROC curve of class {0} (area = {1:0.2f})'
              ''.format(lb.classes_[i], roc_auc[i]))
 
 plt.plot([0, 1], [0, 1], 'k--', lw=2)
