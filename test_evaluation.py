@@ -89,6 +89,7 @@ fpr = dict()
 tpr = dict()
 roc_auc = dict()
 for i in range(labelsCount):
+    print('label index: ', i)
     fpr[i], tpr[i], _ = roc_curve(testY[:, i], predictions[:, i])
     roc_auc[i] = auc(fpr[i], tpr[i])
 
