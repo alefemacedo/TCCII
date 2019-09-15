@@ -32,13 +32,15 @@ ap.add_argument("-e", "--epochs", type=int, default=25,
 	help="# of epochs to train our network for")
 ap.add_argument("-p", "--plot", type=str, default="./output/plot.png",
 	help="path to output loss/accuracy plot")
+ap.add_argument("-o", "--output", type=str, default="./output",
+	help="path to output folder")
 args = vars(ap.parse_args())
 
 # create the network output folder
 print("[INFO] create the output folder")
-if not os.path.exists('./output') or not os.path.isdir('./output'):
+if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
     try:
-        os.mkdir('./output')
+        os.mkdir(args["output"])
     except OSError:
         print ("Failed to create output folder")
     else:
