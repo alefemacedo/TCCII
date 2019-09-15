@@ -64,7 +64,7 @@ for imagePath in imagePaths:
 # convert the data and labels to NumPy arrays and get the labels quantity
 data = np.array(data)
 labels = np.array(labels)
-labelsCount = lb.classes_.shape
+labelsCount = lb.classes_.shape[0]
 print("[INFO] number of classes...")
 print(labelsCount)
 
