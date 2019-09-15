@@ -25,7 +25,7 @@ ap.add_argument("-l", "--label-bin", required=True,
     help="path to  label binarizer")
 ap.add_argument("-d", "--dataset", required=True,
 	help="path to input dataset")
-ap.add_argument("-h", "--history", required=True,
+ap.add_argument("-his", "--history", required=True,
 	help="path to network training history")
 ap.add_argument("-e", "--epochs", type=int, default=25,
 	help="# of epochs to train our network for")
