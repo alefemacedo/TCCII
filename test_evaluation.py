@@ -185,3 +185,4 @@ for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1
 plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')
+plt.savefig('./output/confusion_matrix.png')
