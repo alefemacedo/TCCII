@@ -64,10 +64,11 @@ for imagePath in imagePaths:
 # convert the data and labels to NumPy arrays and get the labels quantity
 data = np.array(data)
 labels = np.array(labels)
-labelsCount = labels.shape[0]
+labelsCount = lb.classes_.shape
+print("[INFO] number of classes...")
+print(labelsCount)
 
 # perform one-hot encoding on the labels
-lb = LabelBinarizer()
 labels = lb.fit_transform(labels)
 
 # partition the data into training and testing splits using 75% of
@@ -88,9 +89,7 @@ print(classification_report(testY.argmax(axis=1),
 fpr = dict()
 tpr = dict()
 roc_auc = dict()
-print('labels count', labelsCount)
 for i in range(labelsCount):
-    print('label index: ', i)
     fpr[i], tpr[i], _ = roc_curve(testY[:, i], predictions[:, i])
     roc_auc[i] = auc(fpr[i], tpr[i])
 
