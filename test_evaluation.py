@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # USAGE
 # python predict_video.py --model model/activity.model --label-bin model/lb.pickle --input example_clips/lifting.mp4 --output output/lifting_128avg.avi --size 128
+# set the matplotlib backend so figures can be saved in the background
+import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 
 # import the necessary packages
 from keras.models import load_model
