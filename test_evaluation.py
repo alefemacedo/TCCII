@@ -88,6 +88,7 @@ print(classification_report(testY.argmax(axis=1),
 fpr = dict()
 tpr = dict()
 roc_auc = dict()
+print('labels count', labelsCount)
 for i in range(labelsCount):
     print('label index: ', i)
     fpr[i], tpr[i], _ = roc_curve(testY[:, i], predictions[:, i])
