@@ -7,7 +7,6 @@ plt.switch_backend('agg')
 
 # import the necessary packages
 from keras.models import load_model
-from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
 from imutils import paths
@@ -97,6 +96,7 @@ predictions = model.predict(testX, batch_size=32)
 print(classification_report(testY.argmax(axis=1),
 	predictions.argmax(axis=1), target_names=lb.classes_))
 
+print("[INFO] construct ROC curve...")
 # construct the roc curves and calc the aucs to min and macro averages
 # as well as for each class
 
@@ -168,6 +168,7 @@ plt.title('ROC curve multi-class')
 plt.legend(loc='lower right')
 plt.savefig('./output/roc.png')
 
+print("[INFO] construct confusion matrix...")
 # construct the multi-class confusion matrix
 confusion = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
 
@@ -177,8 +178,8 @@ plt.imshow(confusion, interpolation='nearest', cmap=plt.cm.cool)
 plt.title('Confusion Matrix')
 plt.colorbar()
 tick_marks = np.arange(labelsCount)
-plt.xticks(tick_marks, labels, rotation=45)
-plt.yticks(tick_marks, labels)
+plt.xticks(tick_marks, lb.classes_, rotation=45)
+plt.yticks(tick_marks, lb.classes_)
 thresh = confusion.max() / 2
 for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1])):
     plt.text(i, j, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
@@ -186,3 +187,5 @@ plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')
 plt.savefig('./output/confusion_matrix.png')
+
+print("[INFO] evaluation finished...")

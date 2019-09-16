@@ -11,12 +11,13 @@ from resnet.ResNet50 import ResNet50
 from keras.optimizers import SGD
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, roc_curve, auc
+from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
 from imutils import paths
 from scipy import interp
 import numpy as np
 import argparse
 import pickle
+import itertools
 import cv2
 import os
 
@@ -144,6 +145,7 @@ predictions = model.predict(testX, batch_size=32)
 print(classification_report(testY.argmax(axis=1),
 	predictions.argmax(axis=1), target_names=lb.classes_))
 
+print("[INFO] construct ROC curve...")
 # construct the roc curves and calc the aucs to min and macro averages
 # as well as for each class
 
@@ -214,3 +216,25 @@ plt.ylabel('True positive rate')
 plt.title('ROC curve multi-class')
 plt.legend(loc='lower right')
 plt.savefig('./output/roc.png')
+
+print("[INFO] construct confusion matrix...")
+# construct the multi-class confusion matrix
+confusion = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
+
+# plot the confusion matrix
+plt.figure()
+plt.imshow(confusion, interpolation='nearest', cmap=plt.cm.cool)
+plt.title('Confusion Matrix')
+plt.colorbar()
+tick_marks = np.arange(labelsCount)
+plt.xticks(tick_marks, lb.classes_, rotation=45)
+plt.yticks(tick_marks, lb.classes_)
+thresh = confusion.max() / 2
+for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1])):
+    plt.text(i, j, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
+plt.tight_layout()
+plt.ylabel('True Label')
+plt.xlabel('Predict Label')
+plt.savefig('./output/confusion_matrix.png')
+
+print("[INFO] training finished...")
