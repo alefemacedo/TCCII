@@ -33,7 +33,7 @@ def calcOpticalFlowHS(path, video_name, class_path_of, class_path_raw):
     V = cv.CreateMat(old_frame.shape[0], old_frame.shape[1], cv.CV_32FC1)
     
     # Create figure with mask background and remove the Axes
-    fig, ax = plt.subplots(num=1)
+    fig, ax = plt.subplots(num=0)
     ax.imshow(mask)
     ax.set_axis_off()
     
@@ -43,6 +43,7 @@ def calcOpticalFlowHS(path, video_name, class_path_of, class_path_raw):
         
         if not ret:
             success = True
+            plt.clf();
             break
         
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

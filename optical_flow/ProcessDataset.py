@@ -106,4 +106,5 @@ def processDataset(dataset_config):
     processPath(dataset_config['path'], dataset_config['database'], dataset_config['save_path_of'], dataset_config['save_path_raw'])
 
 if __name__ == "__main__":
-    main()         
+    main()
+    print('[INFO] dataset processing finished...')         

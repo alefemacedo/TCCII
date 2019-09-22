@@ -52,12 +52,13 @@ while True:
     # if the frame was not grabbed, then we have reached the end
     # of the stream
     if not grabbed:
+        print('[ERROR] first frame not grabbed...')
         break
 
     # if the frame dimensions are empty, grab them
     if W is None or H is None:
         (H, W) = frame.shape[:2]
-        if args['optical-flow']:
+        if args['optical_flow']:
             # create initial values for Optical Flow horizontal and vertical components
             U = cv.CreateMat(H, W, cv.CV_32FC1)
             V = cv.CreateMat(H, W, cv.CV_32FC1)
@@ -73,15 +74,16 @@ while True:
             old_frame = frame.copy()
             (grabbed, frame) = vs.read()
             if not grabbed:
+                print('[ERROR] frame not grabbed...')
                 break
     
     # clone the output frame, then convert it from BGR to RGB
     # ordering
-    output = frame.copy()        
+    output = frame.copy()   
     
     # if the optical optical flow must be used, convert the frame into a
     # cumulated optical flow image
-    if args['optical-flow']:
+    if args['optical_flow']:
         # convert the frames into opencv grayscale arrays
         old_gray_cv = cv.fromarray(cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY))
         frame_gray_cv = cv.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
@@ -127,13 +129,13 @@ while True:
 
     # draw the activity on the output frame
     text = "behavior: {}".format(label)
-    cv2.putText(output, text, (35, 50), cv2.FONT_HERSHEY_SIMPLEX,
-        1.25, (0, 255, 0), 5)
+    cv2.putText(output, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
+        0.25, (0, 255, 0), 1)
 
     # check if the video writer is None
     if writer is None:
         # initialize our video writer
-        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        fourcc = cv2.cv.CV_FOURCC(*"MJPG")
         writer = cv2.VideoWriter(args["output"], fourcc, 30,
             (W, H), True)
 
@@ -142,13 +144,16 @@ while True:
 
     # show the output image
     cv2.imshow("Output", output)
+    cv2.imshow("Optical Flow", frame)
     key = cv2.waitKey(1) & 0xFF
 
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
+        print('[INFO] stop key has pressed...')
         break
 
 # release the file pointers
 print("[INFO] cleaning up...")
 writer.release()
 vs.release()
+cv2.destroyAllWindows()

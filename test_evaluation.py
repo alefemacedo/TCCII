@@ -31,8 +31,6 @@ ap.add_argument("-his", "--history", required=True,
 	help="path to network training history")
 ap.add_argument("-e", "--epochs", type=int, default=25,
 	help="# of epochs to train our network for")
-ap.add_argument("-p", "--plot", type=str, default="./output/plot.png",
-	help="path to output loss/accuracy plot")
 ap.add_argument("-o", "--output", type=str, default="./output",
 	help="path to output folder")
 args = vars(ap.parse_args())
@@ -83,18 +81,24 @@ print("[INFO] number of classes...")
 print(labelsCount)
 
 # perform one-hot encoding on the labels
-labels = lb.fit_transform(labels)
+labels = lb.transform(labels)
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
 (trainX, testX, trainY, testY) = train_test_split(data, labels,
-	test_size=0.25, stratify=labels, random_state=42)
+	test_size=0.98, stratify=labels, random_state=42)
+
+print("[INFO] test split size...")
+print(testY.shape[0])
 
 # evaluate the network
 print("[INFO] evaluating network...")
 predictions = model.predict(testX, batch_size=32) 
 print(classification_report(testY.argmax(axis=1),
-	predictions.argmax(axis=1), target_names=lb.classes_))
+	predictions.argmax(axis=1), labels=range(labelsCount), target_names=lb.classes_))
+
+print("[INFO] predictions size...")
+print(np.array(predictions).shape[0])
 
 print("[INFO] construct ROC curve...")
 # construct the roc curves and calc the aucs to min and macro averages
@@ -111,7 +115,7 @@ for i in range(labelsCount):
 # compute micro-average ROC curve and ROC AUC
 fpr["micro"], tpr["micro"], _ = roc_curve(testY.ravel(), predictions.ravel())
 roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-    
+
 # compute macro-average ROC curve and ROC AUC
 
 # first aggregate all false positive rates
@@ -132,15 +136,15 @@ roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
 N = args["epochs"]
 plt.style.use("ggplot")
 plt.figure()
-plt.plot(np.arange(0, N), history["loss"], label="train_loss")
-plt.plot(np.arange(0, N), history["val_loss"], label="val_loss")
-plt.plot(np.arange(0, N), history["acc"], label="train_acc")
-plt.plot(np.arange(0, N), history["val_acc"], label="val_acc")
+plt.plot(np.arange(0, N), history["loss"], label="train_loss", linestyle='solid')
+plt.plot(np.arange(0, N), history["val_loss"], label="val_loss", linestyle='dotted')
+plt.plot(np.arange(0, N), history["acc"], label="train_acc", linestyle='dashed')
+plt.plot(np.arange(0, N), history["val_acc"], label="val_acc", linestyle='dashdot')
 plt.title("Training Loss and Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
-plt.savefig(args["plot"])
+plt.savefig(os.path.join(args['output'], 'plot.png'))
 
 # plot all ROC curves
 plt.figure()
@@ -166,7 +170,7 @@ plt.xlabel('False positive rate')
 plt.ylabel('True positive rate')
 plt.title('ROC curve multi-class')
 plt.legend(loc='lower right')
-plt.savefig('./output/roc.png')
+plt.savefig(os.path.join(args['output'], 'roc.png'))
 
 print("[INFO] construct confusion matrix...")
 # construct the multi-class confusion matrix
@@ -186,6 +190,6 @@ for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1
 plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')
-plt.savefig('./output/confusion_matrix.png')
+plt.savefig(os.path.join(args['output'], 'confusion_matrix.png'))
 
 print("[INFO] evaluation finished...")
