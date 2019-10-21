@@ -25,13 +25,13 @@ import os
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--dataset", required=True,
 	help="path to input dataset")
-ap.add_argument("-m", "--model", required=False, default="./output/behavior.model",
+ap.add_argument("-m", "--model", required=False, default="behavior.model",
 	help="path to output serialized model")
-ap.add_argument("-l", "--label-bin", required=False, default="./output/lb.pickle",
+ap.add_argument("-l", "--label-bin", required=False, default="lb.pickle",
 	help="path to output label binarizer")
 ap.add_argument("-e", "--epochs", type=int, default=25,
 	help="# of epochs to train our network for")
-ap.add_argument("-p", "--plot", type=str, default="./output/plot.png",
+ap.add_argument("-p", "--plot", type=str, default="plot.png",
 	help="path to output loss/accuracy plot")
 ap.add_argument("-o", "--output", type=str, default="./output",
 	help="path to output folder")
@@ -127,17 +127,23 @@ H = model.fit_generator(
 
 # serialize the model to disk
 print("[INFO] serializing network...")
-model.save(args["model"])
+model.save(os.path.join(args['output'], args["model"]))
 
 # serialize the label binarizer to disk
-f = open(args["label_bin"], "wb")
+f = open(os.path.join(args['output'], args["label_bin"]), "wb")
 f.write(pickle.dumps(lb))
 f.close()
 
 # serialize the network training history to disk
-f = open('./output/history', "wb")
+f = open(os.path.join(args['output'], 'history'), "wb")
 f.write(pickle.dumps(H.history))
 f.close()
+
+# serialize the dataset split
+np.save(os.path.join(args['output'], 'trainX.npy'), trainX)
+np.save(os.path.join(args['output'], 'trainY.npy'), trainY)
+np.save(os.path.join(args['output'], 'testX.npy'), testX)
+np.save(os.path.join(args['output'], 'testY.npy'), testY)
 
 # evaluate the network
 print("[INFO] evaluating network...")
@@ -189,7 +195,7 @@ plt.title("Training Loss and Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
-plt.savefig(args["plot"])
+plt.savefig(os.path.join(args['output'], args["plot"]))
 
 # plot all ROC curves
 plt.figure()
@@ -215,7 +221,7 @@ plt.xlabel('False positive rate')
 plt.ylabel('True positive rate')
 plt.title('ROC curve multi-class')
 plt.legend(loc='lower right')
-plt.savefig('./output/roc.png')
+plt.savefig(os.path.join(args['output'], 'roc.png'))
 
 print("[INFO] construct confusion matrix...")
 # construct the multi-class confusion matrix
@@ -231,10 +237,10 @@ plt.xticks(tick_marks, lb.classes_, rotation=45)
 plt.yticks(tick_marks, lb.classes_)
 thresh = confusion.max() / 2
 for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1])):
-    plt.text(i, j, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
+    plt.text(j, i, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
 plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')
-plt.savefig('./output/confusion_matrix.png')
+plt.savefig(os.path.join(args['output'], 'confusion_matrix.png'))
 
 print("[INFO] training finished...")

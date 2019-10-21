@@ -186,7 +186,7 @@ plt.xticks(tick_marks, lb.classes_, rotation=45)
 plt.yticks(tick_marks, lb.classes_)
 thresh = confusion.max() / 2
 for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1])):
-    plt.text(i, j, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
+    plt.text(j, i, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
 plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')
