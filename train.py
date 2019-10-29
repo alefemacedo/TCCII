@@ -1,5 +1,5 @@
 # USAGE
-# python train.py --dataset Sports-Type-Classifier/data --model model/activity.model --label-bin model/lb.pickle --epochs 50
+# nohup python /home/almacedobr/TCCII/train.py -d /home/almacedobr/weizmann/saved_dataset_of/ -e 100 >/home/almacedobr/logs/train.log </dev/null 2>&1 &
 
 # set the matplotlib backend so figures can be saved in the background
 import matplotlib.pyplot as plt

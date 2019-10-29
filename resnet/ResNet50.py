@@ -4,7 +4,7 @@ from keras import layers
 from keras.layers import Input, Add, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D, AveragePooling2D, MaxPooling2D
 from keras.utils import layer_utils
 from keras.models import Model
-from resnets_utils import *
+from resnet.resnets_utils import *
 from keras.initializers import glorot_uniform
 """matplotlib inline"""
 

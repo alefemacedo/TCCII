@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # USAGE
-# python predict_video.py --model model/activity.model --label-bin model/lb.pickle --input example_clips/lifting.mp4 --output output/lifting_128avg.avi --size 128
+# nohup python /home/almacedobr/TCCII/test_evaluation.py -d /home/almacedobr/weizmann_test/saved_dataset_of/ -m /home/almacedobr/output_weizmann_of/behavior.model -l /home/almacedobr/output_weizmann_of/lb.pickle -his /home/almacedobr/output_weizmann_of/history -e 100 >/home/almacedobr/logs/evaluation.log </dev/null 2>&1 &
 # set the matplotlib backend so figures can be saved in the background
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
