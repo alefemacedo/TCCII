@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 # import the necessary packages
-from keras.preprocessing.image import ImageDataGenerator
+
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from resnet.ResNet50 import ResNet50
-from keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
@@ -56,18 +57,18 @@ labels = []
 
 # loop over the image paths
 for imagePath in imagePaths:
-	# extract the class label from the filename
-	label = imagePath.split(os.path.sep)[-2]
-
-	# load the image, convert it to RGB channel ordering, and resize
-	# it to be a fixed 224x224 pixels, ignoring aspect ratio
-	image = cv2.imread(imagePath)
-	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-	image = cv2.resize(image, (224, 224))
-
-	# update the data and labels lists, respectively
-	data.append(image)
-	labels.append(label)
+    # extract the class label from the filename
+    label = imagePath.split(os.path.sep)[-2]
+    
+    # load the image, convert it to RGB channel ordering, and resize
+    # it to be a fixed 224x224 pixels, ignoring aspect ratio
+    image = cv2.imread(os.path.normpath(imagePath))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (224, 224))
+    
+    # update the data and labels lists, respectively
+    data.append(image)
+    labels.append(label)
 
 # convert the data and labels to NumPy arrays and get the labels quantity
 data = np.array(data)

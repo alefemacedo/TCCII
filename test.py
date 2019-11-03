@@ -2,7 +2,7 @@
 # python predict_video.py --model model/activity.model --label-bin model/lb.pickle --input example_clips/lifting.mp4 --output output/lifting_128avg.avi --size 128
 
 # import the necessary packages
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 from collections import deque
 import matplotlib.pyplot as plt
 import numpy as np
