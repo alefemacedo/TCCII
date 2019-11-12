@@ -7,19 +7,17 @@ plt.switch_backend('agg')
 
 # import the necessary packages
 
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from resnet.ResNet50 import ResNet50
 from tensorflow.keras.optimizers import SGD
+import tensorflow as tf
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
-from imutils import paths
 from scipy import interp
+from imutils import paths
 import numpy as np
 import argparse
 import pickle
 import itertools
-import cv2
 import os
 
 # construct the argument parser and parse the arguments
@@ -38,6 +36,29 @@ ap.add_argument("-o", "--output", type=str, default="./output",
 	help="path to output folder")
 args = vars(ap.parse_args())
 
+print('[INFO] using GPU...')
+print(tf.config.experimental.list_physical_devices('GPU'))
+
+# process the image paths
+def parse_image(filepath,labels):
+  # extract the class label from the filename
+  parts = tf.strings.split(filepath, os.path.sep)
+  label = parts[-2] == labels
+
+  # load the image, convert it to RGB channel ordering, and resize
+  # it to be a fixed 224x224 pixels, ignoring aspect ratio
+  image = tf.io.read_file(filepath)
+  image = tf.image.decode_png(image, channels=3)
+  image = tf.image.resize(image, [224, 224])
+
+  # mean subtraction
+  mean = np.array([123.68, 116.779, 103.939][::1], dtype="float32")
+  image -= mean
+  return image, label
+
+def get_labels(image,label):
+    return label
+
 # create the network output folder
 print("[INFO] create the output folder")
 if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
@@ -51,31 +72,16 @@ if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
 # grab the list of images in our dataset directory, then initialize
 # the list of data (i.e., images) and class images
 print("[INFO] loading images...")
-imagePaths = list(paths.list_images(args["dataset"]))
-data = []
-labels = []
+imagePaths = tf.data.Dataset.list_files(os.path.normpath(args['dataset'] + '\*\*'))
+labels = os.listdir(args["dataset"])
+data = imagePaths.map(lambda filepath: parse_image(filepath, labels))
 
-# loop over the image paths
-for imagePath in imagePaths:
-    # extract the class label from the filename
-    label = imagePath.split(os.path.sep)[-2]
-    
-    # load the image, convert it to RGB channel ordering, and resize
-    # it to be a fixed 224x224 pixels, ignoring aspect ratio
-    image = cv2.imread(os.path.normpath(imagePath))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (224, 224))
-    
-    # update the data and labels lists, respectively
-    data.append(image)
-    labels.append(label)
-
-# convert the data and labels to NumPy arrays and get the labels quantity
-data = np.array(data)
-labels = np.array(labels)
+imagesCount = len(list(paths.list_images(os.path.normpath(args['dataset']))))
 labelsCount = np.unique(labels, axis=0).size
-print("[INFO] number of classes...")
+print("[INFO] number of classes and dataset size...")
 print(labelsCount)
+print("[INFO] dataset size...")
+print(imagesCount)
 
 # perform one-hot encoding on the labels
 lb = LabelBinarizer()
@@ -83,29 +89,22 @@ labels = lb.fit_transform(labels)
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
-(trainX, testX, trainY, testY) = train_test_split(data, labels,
-	test_size=0.25, stratify=labels, random_state=42)
+trainSize = int(imagesCount * 0.75)
+testSize = int(imagesCount * 0.25)
+
+data = data.shuffle(2000)
+train = data.take(trainSize)
+test = data.skip(trainSize)
 
 # initialize the training data augmentation object
-trainAug = ImageDataGenerator(
-	rotation_range=30,
-	zoom_range=0.15,
-	width_shift_range=0.2,
-	height_shift_range=0.2,
-	shear_range=0.15,
-	horizontal_flip=True,
-	fill_mode="nearest")
-
-# initialize the validation/testing data augmentation object (which
-# we'll be adding mean subtraction to)
-valAug = ImageDataGenerator()
-
-# define the ImageNet mean subtraction (in RGB order) and set the
-# the mean subtraction value for each of the data augmentation
-# objects
-mean = np.array([123.68, 116.779, 103.939], dtype="float32")
-trainAug.mean = mean
-valAug.mean = mean
+#trainAug = ImageDataGenerator(
+#	rotation_range=30,
+#	zoom_range=0.15,
+#	width_shift_range=0.2,
+#	height_shift_range=0.2,
+#	shear_range=0.15,
+#	horizontal_flip=True,
+#	fill_mode="nearest")
 
 # load the ResNet-50 network, with the images shapes and the labels quantity
 model = ResNet50(input_shape=(224, 224, 3), classes=labelsCount)
@@ -120,10 +119,10 @@ model.compile(loss="categorical_crossentropy", optimizer=opt,
 # train the network
 print("[INFO] training resnet cnn...")
 H = model.fit_generator(
-	trainAug.flow(trainX, trainY, batch_size=32),
-	steps_per_epoch=len(trainX) // 32,
-	validation_data=valAug.flow(testX, testY),
-	validation_steps=len(testX) // 32,
+	train.batch(32, drop_remainder=True),
+	steps_per_epoch=trainSize // 32,
+	validation_data=test.batch(32),
+	validation_steps=testSize // 32,
 	epochs=args["epochs"])
 
 # serialize the model to disk
@@ -140,17 +139,11 @@ f = open(os.path.join(args['output'], 'history'), "wb")
 f.write(pickle.dumps(H.history))
 f.close()
 
-# serialize the dataset split
-np.save(os.path.join(args['output'], 'trainX.npy'), trainX)
-np.save(os.path.join(args['output'], 'trainY.npy'), trainY)
-np.save(os.path.join(args['output'], 'testX.npy'), testX)
-np.save(os.path.join(args['output'], 'testY.npy'), testY)
-
 # evaluate the network
 print("[INFO] evaluating network...")
-predictions = model.predict(testX, batch_size=32) 
-print(classification_report(testY.argmax(axis=1),
-	predictions.argmax(axis=1), target_names=lb.classes_))
+predictions = model.predict(test.batch(32), steps=testSize // 32)
+testOutput = np.array([label.numpy() for label in test.map(get_labels).take((testSize // 32) * 32)])
+print(classification_report(testOutput.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 
 print("[INFO] construct ROC curve...")
 # construct the roc curves and calc the aucs to min and macro averages
@@ -161,11 +154,11 @@ fpr = dict()
 tpr = dict()
 roc_auc = dict()
 for i in range(labelsCount):
-    fpr[i], tpr[i], _ = roc_curve(testY[:, i], predictions[:, i])
+    fpr[i], tpr[i], _ = roc_curve(testOutput[:, i], predictions[:, i])
     roc_auc[i] = auc(fpr[i], tpr[i])
 
 # compute micro-average ROC curve and ROC AUC
-fpr["micro"], tpr["micro"], _ = roc_curve(testY.ravel(), predictions.ravel())
+fpr["micro"], tpr["micro"], _ = roc_curve(testOutput.ravel(), predictions.ravel())
 roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
     
 # compute macro-average ROC curve and ROC AUC
@@ -226,7 +219,7 @@ plt.savefig(os.path.join(args['output'], 'roc.png'))
 
 print("[INFO] construct confusion matrix...")
 # construct the multi-class confusion matrix
-confusion = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
+confusion = confusion_matrix(testOutput.argmax(axis=1), predictions.argmax(axis=1))
 
 # plot the confusion matrix
 plt.figure()
