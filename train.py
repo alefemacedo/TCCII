@@ -42,7 +42,7 @@ print(tf.config.experimental.list_physical_devices('GPU'))
 # process the image paths
 def parse_image(filepath,labels):
   # extract the class label from the filename
-  parts = tf.strings.split(filepath, os.path.sep)
+  parts = tf.compat.v1.strings.split(filepath, os.path.sep, result_type="RaggedTensor")
   label = parts[-2] == labels
 
   # load the image, convert it to RGB channel ordering, and resize
@@ -72,7 +72,7 @@ if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
 # grab the list of images in our dataset directory, then initialize
 # the list of data (i.e., images) and class images
 print("[INFO] loading images...")
-imagePaths = tf.data.Dataset.list_files(os.path.normpath(args['dataset'] + '\*\*'))
+imagePaths = tf.data.Dataset.list_files(os.path.normpath(args['dataset'] + '/*/*'))
 labels = os.listdir(args["dataset"])
 data = imagePaths.map(lambda filepath: parse_image(filepath, labels))
 
@@ -118,7 +118,7 @@ model.compile(loss="categorical_crossentropy", optimizer=opt,
 
 # train the network
 print("[INFO] training resnet cnn...")
-H = model.fit_generator(
+H = model.fit(
 	train.batch(32, drop_remainder=True),
 	steps_per_epoch=trainSize // 32,
 	validation_data=test.batch(32),
