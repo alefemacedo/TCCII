@@ -20,6 +20,9 @@ import pickle
 import itertools
 import os
 
+# force enable eager execution
+tf.compat.v1.enable_eager_execution()
+
 with tf.device('/cpu:0'):
     # construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
@@ -36,8 +39,6 @@ with tf.device('/cpu:0'):
     ap.add_argument("-o", "--output", type=str, default="./output",
     	help="path to output folder")
     args = vars(ap.parse_args())
-    
-    tf.compat.v1.enable_eager_execution()
     
     # process the image paths
     def parse_image(filepath,labels):
