@@ -1,6 +1,10 @@
 # USAGE
 # nohup python /home/almacedobr/TCCII/train.py -d /home/almacedobr/weizmann/saved_dataset_of/ -e 100 >/home/almacedobr/logs/train.log </dev/null 2>&1 &
 
+import tensorflow as tf
+# force enable eager execution
+tf.compat.v1.enable_eager_execution()
+
 # set the matplotlib backend so figures can be saved in the background
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
@@ -9,7 +13,7 @@ plt.switch_backend('agg')
 
 from resnet.ResNet50 import ResNet50
 from tensorflow.keras.optimizers import SGD
-import tensorflow as tf
+
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
 from scipy import interp
@@ -19,9 +23,6 @@ import argparse
 import pickle
 import itertools
 import os
-
-# force enable eager execution
-tf.compat.v1.enable_eager_execution()
 
 with tf.device('/cpu:0'):
     # construct the argument parser and parse the arguments
