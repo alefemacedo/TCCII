@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 # import the necessary packages
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
@@ -57,21 +58,24 @@ print("[INFO] loading images...")
 imagePaths = list(paths.list_images(args["dataset"]))
 data = []
 labels = []
+mean = np.array([123.68, 116.779, 103.939][::1], dtype="float32")
+
 
 # loop over the image paths
 for imagePath in imagePaths:
-	# extract the class label from the filename
-	label = imagePath.split(os.path.sep)[-2]
-
-	# load the image, convert it to RGB channel ordering, and resize
-	# it to be a fixed 224x224 pixels, ignoring aspect ratio
-	image = cv2.imread(imagePath)
-	image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-	image = cv2.resize(image, (224, 224))
-
-	# update the data and labels lists, respectively
-	data.append(image)
-	labels.append(label)
+    # extract the class label from the filename
+    label = imagePath.split(os.path.sep)[-2]
+    
+    # load the image, convert it to RGB channel ordering, and resize
+    # it to be a fixed 224x224 pixels, ignoring aspect ratio
+    image = cv2.imread(imagePath)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (224, 224)).astype("float32")
+    image -= mean
+    
+    # update the data and labels lists, respectively
+    data.append(image)
+    labels.append(label)
 
 # convert the data and labels to NumPy arrays and get the labels quantity
 data = np.array(data)
@@ -93,7 +97,7 @@ print(testY.shape[0])
 
 # evaluate the network
 print("[INFO] evaluating network...")
-predictions = model.predict(testX, batch_size=32) 
+predictions = model.predict(tf.convert_to_tensor(testX, dtype=tf.float32), batch_size=32) 
 print(classification_report(testY.argmax(axis=1),
 	predictions.argmax(axis=1), labels=range(labelsCount), target_names=lb.classes_))
 
@@ -138,8 +142,8 @@ plt.style.use("ggplot")
 plt.figure()
 plt.plot(np.arange(0, N), history["loss"], label="train_loss", linestyle='solid')
 plt.plot(np.arange(0, N), history["val_loss"], label="val_loss", linestyle='dotted')
-plt.plot(np.arange(0, N), history["acc"], label="train_acc", linestyle='dashed')
-plt.plot(np.arange(0, N), history["val_acc"], label="val_acc", linestyle='dashdot')
+plt.plot(np.arange(0, N), history["accuracy"], label="train_acc", linestyle='dashed')
+plt.plot(np.arange(0, N), history["val_accuracy"], label="val_acc", linestyle='dashdot')
 plt.title("Training Loss and Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
@@ -177,7 +181,7 @@ print("[INFO] construct confusion matrix...")
 confusion = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
 
 # plot the confusion matrix
-plt.figure()
+plt.figure(figsize = (10,7))
 plt.imshow(confusion, interpolation='nearest', cmap=plt.cm.cool)
 plt.title('Confusion Matrix')
 plt.colorbar()
