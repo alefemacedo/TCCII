@@ -7,11 +7,11 @@ import tensorflow as tf
 
 # set the matplotlib backend so figures can be saved in the background
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
+#plt.switch_backend('agg')
 
 # import the necessary packages
 
-from resnet.ResNet50 import ResNet50
+from resnet.ResNet18 import ResNet18
 from tensorflow.keras.optimizers import SGD
 
 from sklearn.preprocessing import LabelBinarizer
@@ -63,6 +63,9 @@ def parse_image(filepath,labels):
 def get_labels(image,label):
     return label
 
+def get_images(image,label):
+    return image
+
 # create the network output folder
 print("[INFO] create the output folder")
 if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
@@ -82,7 +85,7 @@ data = imagePaths.map(lambda filepath: parse_image(filepath, labels))
 
 imagesCount = len(list(paths.list_images(os.path.normpath(args['dataset']))))
 labelsCount = np.unique(labels, axis=0).size
-print("[INFO] number of classes and dataset size...")
+print("[INFO] number of classes...")
 print(labelsCount)
 print("[INFO] dataset size...")
 print(imagesCount)
@@ -93,15 +96,15 @@ labels = lb.fit_transform(labels)
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
-trainSize = int(imagesCount * 0.75)
-testSize = int(imagesCount * 0.25)
+trainSize = int(imagesCount * 0.80)
+testSize = int(imagesCount * 0.20)
 
 data = data.shuffle(buffer_size=2000)
 train = data.take(trainSize)
 test = data.skip(trainSize)
 
 # load the ResNet-50 network, with the images shapes and the labels quantity
-model = ResNet50(input_shape=(224, 224, 3), classes=labelsCount)
+model = ResNet18(input_shape=(224, 224, 3), classes=labelsCount)
 
 # compile our model (this needs to be done after our setting our
 # layers to being non-trainable)
@@ -121,23 +124,23 @@ H = model.fit(
 
 # serialize the model to disk
 print("[INFO] serializing network...")
-model.save(os.path.join(args['output'], args["model"]))
+model.save(os.path.normpath(os.path.join(args['output'], args["model"])))
 
 # serialize the label binarizer to disk
-f = open(os.path.join(args['output'], args["label_bin"]), "wb")
-f.write(pickle.dumps(lb))
+f = open(os.path.normpath(os.path.join(args['output'], args["label_bin"])), "wb")
+f.write(pickle.dumps(lb, protocol=2))
 f.close()
 
 # serialize the network training history to disk
-f = open(os.path.join(args['output'], 'history'), "wb")
+f = open(os.path.normpath(os.path.join(args['output'], 'history')), "wb")
 f.write(pickle.dumps(H.history))
 f.close()
 
 # evaluate the network
 print("[INFO] evaluating network...")
+testY = np.array([label.numpy() for label in test.map(get_labels).take((testSize // args["batch"]) * args["batch"])])
 predictions = model.predict(test.batch(args["batch"]), steps=testSize // args["batch"])
-testOutput = np.array([label.numpy() for label in test.map(get_labels).take((testSize // args["batch"]) * args["batch"])])
-print(classification_report(testOutput.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
+print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 
 print("[INFO] construct ROC curve...")
 # construct the roc curves and calc the aucs to min and macro averages
@@ -148,11 +151,11 @@ fpr = dict()
 tpr = dict()
 roc_auc = dict()
 for i in range(labelsCount):
-    fpr[i], tpr[i], _ = roc_curve(testOutput[:, i], predictions[:, i])
+    fpr[i], tpr[i], _ = roc_curve(testY[:, i], predictions[:, i])
     roc_auc[i] = auc(fpr[i], tpr[i])
 
 # compute micro-average ROC curve and ROC AUC
-fpr["micro"], tpr["micro"], _ = roc_curve(testOutput.ravel(), predictions.ravel())
+fpr["micro"], tpr["micro"], _ = roc_curve(testY.ravel(), predictions.ravel())
 roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
     
 # compute macro-average ROC curve and ROC AUC
@@ -177,13 +180,13 @@ plt.style.use("ggplot")
 plt.figure()
 plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
 plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
-plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
-plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
+plt.plot(np.arange(0, N), H.history["accuracy"], label="train_acc")
+plt.plot(np.arange(0, N), H.history["val_accuracy"], label="val_acc")
 plt.title("Training Loss and Accuracy on Dataset")
 plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
-plt.savefig(os.path.join(args['output'], args["plot"]))
+plt.savefig(os.path.normpath(os.path.join(args['output'], args["plot"])))
 
 # plot all ROC curves
 plt.figure()
@@ -209,14 +212,14 @@ plt.xlabel('False positive rate')
 plt.ylabel('True positive rate')
 plt.title('ROC curve multi-class')
 plt.legend(loc='lower right')
-plt.savefig(os.path.join(args['output'], 'roc.png'))
+plt.savefig(os.path.normpath(os.path.join(args['output'], 'roc.png')))
 
 print("[INFO] construct confusion matrix...")
 # construct the multi-class confusion matrix
-confusion = confusion_matrix(testOutput.argmax(axis=1), predictions.argmax(axis=1))
+confusion = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
 
 # plot the confusion matrix
-plt.figure()
+plt.figure(figsize = (10,7))
 plt.imshow(confusion, interpolation='nearest', cmap=plt.cm.cool)
 plt.title('Confusion Matrix')
 plt.colorbar()
