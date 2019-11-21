@@ -3,6 +3,8 @@
 
 # import the necessary packages
 from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import CustomObjectScope
+from tensorflow.keras.initializers import glorot_uniform
 from collections import deque
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,7 +31,9 @@ args = vars(ap.parse_args())
 
 # load the trained model and label binarizer from disk
 print("[INFO] loading model and label binarizer...")
-model = load_model(args["model"])
+with CustomObjectScope({'GlorotUniform': glorot_uniform()}):
+    model = load_model(args["model"])
+
 lb = pickle.loads(open(args["label_bin"], "rb").read())
 
 # initialize the image mean for mean subtraction along with the
