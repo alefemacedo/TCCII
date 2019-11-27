@@ -78,26 +78,18 @@ for imagePath in imagePaths:
     labels.append(label)
 
 # convert the data and labels to NumPy arrays and get the labels quantity
-data = np.array(data)
+data = tf.convert_to_tensor(data)
 labels = np.array(labels)
 labelsCount = lb.classes_.shape[0]
 print("[INFO] number of classes...")
 print(labelsCount)
 
 # perform one-hot encoding on the labels
-labels = lb.transform(labels)
-
-# partition the data into training and testing splits using 75% of
-# the data for training and the remaining 25% for testing
-(trainX, testX, trainY, testY) = train_test_split(data, labels,
-	test_size=0.98, stratify=labels, random_state=42)
-
-print("[INFO] test split size...")
-print(testY.shape[0])
+testY = lb.transform(labels)
 
 # evaluate the network
 print("[INFO] evaluating network...")
-predictions = model.predict(tf.convert_to_tensor(testX, dtype=tf.float32), batch_size=32) 
+predictions = model.predict(data, batch_size=1)
 print(classification_report(testY.argmax(axis=1),
 	predictions.argmax(axis=1), labels=range(labelsCount), target_names=lb.classes_))
 
