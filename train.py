@@ -96,8 +96,8 @@ labels = lb.fit_transform(labels)
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
-trainSize = int(imagesCount * 0.80)
-testSize = int(imagesCount * 0.20)
+trainSize = int(imagesCount * 0.75)
+testSize = int(imagesCount * 0.25)
 
 data = data.shuffle(buffer_size=2000)
 train = data.take(trainSize)
