@@ -32,6 +32,8 @@ ap.add_argument("-his", "--history", required=True,
 	help="path to network training history")
 ap.add_argument("-e", "--epochs", type=int, default=25,
 	help="# of epochs to train our network for")
+ap.add_argument("-b", "--batch", type=int, default=32,
+	help="# of batch size to train our network for")
 ap.add_argument("-o", "--output", type=str, default="./output",
 	help="path to output folder")
 args = vars(ap.parse_args())
@@ -89,7 +91,7 @@ testY = lb.transform(labels)
 
 # evaluate the network
 print("[INFO] evaluating network...")
-predictions = model.predict(data, batch_size=1)
+predictions = model.predict(data, batch_size=args['batch'])
 print(classification_report(testY.argmax(axis=1),
 	predictions.argmax(axis=1), labels=range(labelsCount), target_names=lb.classes_))
 
