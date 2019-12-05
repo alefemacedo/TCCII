@@ -66,9 +66,6 @@ def get_labels(image,label):
 def get_images(image,label):
     return image
 
-def get_data(image,label):
-    return image, label
-
 # create the network output folder
 print("[INFO] create the output folder")
 if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
@@ -82,29 +79,29 @@ if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
 # grab the list of images in our dataset directory, then initialize
 # the list of data (i.e., images) and class images
 print("[INFO] loading images...")
-imagePaths = tf.data.Dataset.list_files(os.path.normpath(args['dataset'] + '/*/*'))
-labels = os.listdir(args["dataset"])
-data = imagePaths.map(lambda filepath: parse_image(filepath, labels))
+trainPaths = tf.data.Dataset.list_files(os.path.normpath(args['dataset'] + '/training' + '/*/*'))
+testPaths = tf.data.Dataset.list_files(os.path.normpath(args['dataset'] + '/evaluation' + '/*/*'))
+labels = os.listdir(os.path.normpath(args['dataset'] + '/training'))
 
-imagesCount = len(list(paths.list_images(os.path.normpath(args['dataset']))))
+# parsing train and evaluation data
+print("[INFO] parse train and evaluation datasets...")
+train = trainPaths.map(lambda filepath: parse_image(filepath, labels)).shuffle(buffer_size=2000)
+test = testPaths.map(lambda filepath: parse_image(filepath, labels)).shuffle(buffer_size=2000)
+
+trainSize = len(list(paths.list_images(os.path.normpath(args['dataset'] + '/training'))))
+testSize = len(list(paths.list_images(os.path.normpath(args['dataset'] + '/evaluation'))))
 labelsCount = np.unique(labels, axis=0).size
+
 print("[INFO] number of classes...")
 print(labelsCount)
-print("[INFO] dataset size...")
-print(imagesCount)
+print("[INFO] train dataset size...")
+print(trainSize)
+print("[INFO] evaluation dataset size...")
+print(testSize)
 
 # perform one-hot encoding on the labels
 lb = LabelBinarizer()
 labels = lb.fit_transform(labels)
-
-# partition the data into training and testing splits using 75% of
-# the data for training and the remaining 25% for testing
-trainSize = int(imagesCount * 0.85)
-testSize = int(imagesCount * 0.15)
-
-data = data.shuffle(buffer_size=2000)
-train = data.take(trainSize)
-test = data.skip(trainSize)
 
 # load the ResNet-50 network, with the images shapes and the labels quantity
 model = ResNet18(input_shape=(224, 224, 3), classes=labelsCount)
@@ -141,8 +138,7 @@ f.close()
 
 #testY = np.array([label.numpy() for label in test.map(get_labels).take((testSize // args["batch"]) * args["batch"])])
 print("[INFO] construct data list...")
-dataList = list((image.numpy(), label.numpy()) for image, label in test.take((testSize // 32) * 32))
-
+dataList = list((image.numpy(), label.numpy()) for image, label in test.take((testSize // args["batch"]) * args["batch"]))
 print("[INFO] get labels...")
 testY = np.array([o[1] for o in dataList])
 print("[INFO] get images...")
