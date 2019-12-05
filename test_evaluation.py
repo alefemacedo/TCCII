@@ -8,7 +8,6 @@ plt.switch_backend('agg')
 # import the necessary packages
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_curve, auc, confusion_matrix
 from imutils import paths
 import matplotlib.pyplot as plt
@@ -134,25 +133,25 @@ roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
 N = args["epochs"]
 plt.style.use("ggplot")
 plt.figure()
-plt.plot(np.arange(0, N), history["loss"], label="train_loss", linestyle='solid')
+plt.plot(np.arange(0, N), history["loss"], label="trein_loss", linestyle='solid')
 plt.plot(np.arange(0, N), history["val_loss"], label="val_loss", linestyle='dotted')
-plt.plot(np.arange(0, N), history["accuracy"], label="train_acc", linestyle='dashed')
+plt.plot(np.arange(0, N), history["accuracy"], label="trein_acc", linestyle='dashed')
 plt.plot(np.arange(0, N), history["val_accuracy"], label="val_acc", linestyle='dashdot')
-plt.title("Training Loss and Accuracy on Dataset")
-plt.xlabel("Epoch #")
-plt.ylabel("Loss/Accuracy")
+plt.title("Loss e Acurácia de Treinamento no Dataset")
+plt.xlabel("Época #")
+plt.ylabel("Loss/Acurácia")
 plt.legend(loc="lower left")
 plt.savefig(os.path.join(args['output'], 'plot.png'))
 
 # plot all ROC curves
 plt.figure()
 plt.plot(fpr["micro"], tpr["micro"],
-         label='micro-average ROC curve (area = {0:0.2f})'
+         label='Curva ROC da média micro (area = {0:0.2f})'
                ''.format(roc_auc["micro"]),
          color='deeppink', linestyle=':', linewidth=4)
 
 plt.plot(fpr["macro"], tpr["macro"],
-         label='macro-average ROC curve (area = {0:0.2f})'
+         label='Curva ROC da média macro (area = {0:0.2f})'
                ''.format(roc_auc["macro"]),
          color='navy', linestyle=':', linewidth=4)
 
@@ -160,13 +159,13 @@ plt.plot(fpr["macro"], tpr["macro"],
 cmap = plt.cm.get_cmap('cool', labelsCount)
 for i in range(labelsCount):
     plt.plot(fpr[i], tpr[i], color=cmap(i), lw=2,
-             label='ROC curve of class {0} (area = {1:0.2f})'
+             label='Curva ROC da classe {0} (área = {1:0.2f})'
              ''.format(lb.classes_[i], roc_auc[i]))
 
 plt.plot([0, 1], [0, 1], 'k--', lw=2)
-plt.xlabel('False positive rate')
-plt.ylabel('True positive rate')
-plt.title('ROC curve multi-class')
+plt.xlabel('Taxa de falso positivo')
+plt.ylabel('Taxa de verdadeiro positivo')
+plt.title('Curva ROC multi-classe')
 plt.legend(loc='lower right')
 plt.savefig(os.path.join(args['output'], 'roc.png'))
 
@@ -184,7 +183,7 @@ plt.xticks(tick_marks, lb.classes_, rotation=45)
 plt.yticks(tick_marks, lb.classes_)
 thresh = confusion.max() / 2
 for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1])):
-    plt.text(j, i, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
+    plt.text(j, i, confusion[i,j], horizontalalignment='center', color='red' if confusion[i,j] > thresh else 'black')
 plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')

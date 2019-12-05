@@ -66,6 +66,9 @@ def get_labels(image,label):
 def get_images(image,label):
     return image
 
+def get_data(image,label):
+    return image, label
+
 # create the network output folder
 print("[INFO] create the output folder")
 if not os.path.exists(args["output"]) or not os.path.isdir(args["output"]):
@@ -96,8 +99,8 @@ labels = lb.fit_transform(labels)
 
 # partition the data into training and testing splits using 75% of
 # the data for training and the remaining 25% for testing
-trainSize = int(imagesCount * 0.75)
-testSize = int(imagesCount * 0.25)
+trainSize = int(imagesCount * 0.85)
+testSize = int(imagesCount * 0.15)
 
 data = data.shuffle(buffer_size=2000)
 train = data.take(trainSize)
@@ -136,10 +139,18 @@ f = open(os.path.normpath(os.path.join(args['output'], 'history')), "wb")
 f.write(pickle.dumps(H.history))
 f.close()
 
+#testY = np.array([label.numpy() for label in test.map(get_labels).take((testSize // args["batch"]) * args["batch"])])
+print("[INFO] construct data list...")
+dataList = list((image.numpy(), label.numpy()) for image, label in test.take((testSize // 32) * 32))
+
+print("[INFO] get labels...")
+testY = np.array([o[1] for o in dataList])
+print("[INFO] get images...")
+testX = np.array([o[0] for o in dataList])
+
 # evaluate the network
 print("[INFO] evaluating network...")
-testY = np.array([label.numpy() for label in test.map(get_labels).take((testSize // args["batch"]) * args["batch"])])
-predictions = model.predict(test.batch(args["batch"]), steps=testSize // args["batch"])
+predictions = model.predict(testX, batch_size=args["batch"])
 print(classification_report(testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_))
 
 print("[INFO] construct ROC curve...")
@@ -178,25 +189,25 @@ roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
 N = args["epochs"]
 plt.style.use("ggplot")
 plt.figure()
-plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
+plt.plot(np.arange(0, N), H.history["loss"], label="trein_loss")
 plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
-plt.plot(np.arange(0, N), H.history["accuracy"], label="train_acc")
+plt.plot(np.arange(0, N), H.history["accuracy"], label="trein_acc")
 plt.plot(np.arange(0, N), H.history["val_accuracy"], label="val_acc")
-plt.title("Training Loss and Accuracy on Dataset")
-plt.xlabel("Epoch #")
-plt.ylabel("Loss/Accuracy")
+plt.title("Loss e Acurácia de Treinamento no Dataset")
+plt.xlabel("Época #")
+plt.ylabel("Loss/Acurácia")
 plt.legend(loc="lower left")
 plt.savefig(os.path.normpath(os.path.join(args['output'], args["plot"])))
 
 # plot all ROC curves
-plt.figure()
+plt.figure(figsize = (10,7))
 plt.plot(fpr["micro"], tpr["micro"],
-         label='micro-average ROC curve (area = {0:0.2f})'
+         label='Curva ROC da média micro (área = {0:0.2f})'
                ''.format(roc_auc["micro"]),
          color='deeppink', linestyle=':', linewidth=4)
 
 plt.plot(fpr["macro"], tpr["macro"],
-         label='macro-average ROC curve (area = {0:0.2f})'
+         label='Curva ROC da média macro (área = {0:0.2f})'
                ''.format(roc_auc["macro"]),
          color='navy', linestyle=':', linewidth=4)
 
@@ -204,13 +215,13 @@ plt.plot(fpr["macro"], tpr["macro"],
 cmap = plt.cm.get_cmap('cool', labelsCount)
 for i in range(labelsCount):
     plt.plot(fpr[i], tpr[i], color=cmap(i), lw=2,
-             label='ROC curve of class {0} (area = {1:0.2f})'
+             label='Curva ROC da classe {0} (área = {1:0.2f})'
              ''.format(lb.classes_[i], roc_auc[i]))
 
 plt.plot([0, 1], [0, 1], 'k--', lw=2)
-plt.xlabel('False positive rate')
-plt.ylabel('True positive rate')
-plt.title('ROC curve multi-class')
+plt.xlabel('Taxa de falso positivo')
+plt.ylabel('Taxa de verdadeiro positivo')
+plt.title('Curva ROC multi-classe')
 plt.legend(loc='lower right')
 plt.savefig(os.path.normpath(os.path.join(args['output'], 'roc.png')))
 
@@ -228,7 +239,7 @@ plt.xticks(tick_marks, lb.classes_, rotation=45)
 plt.yticks(tick_marks, lb.classes_)
 thresh = confusion.max() / 2
 for i, j in itertools.product(range(confusion.shape[0]), range(confusion.shape[1])):
-    plt.text(j, i, confusion[i,j], horizontalalignment='center', color='white' if confusion[i,j] > thresh else 'black')
+    plt.text(j, i, confusion[i,j], horizontalalignment='center', color='red' if confusion[i,j] > thresh else 'black')
 plt.tight_layout()
 plt.ylabel('True Label')
 plt.xlabel('Predict Label')
