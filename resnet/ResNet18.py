@@ -36,13 +36,14 @@ def identity_block(X, filters, stage, block):
     X_shortcut = X
     
     # First component of main path (zero-padding)
-    X = Conv2D(filters = F1, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2a', kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
-    X = BatchNormalization(axis = 3, name = bn_name_base + '2a', momentum = 0.001)(X)
+    # X = Conv2D(filters = F1, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2a', kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
+    X = Conv2D(filters = F1, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2a', kernel_initializer = glorot_uniform(seed=0))(X)
+    X = BatchNormalization(axis = 3, name = bn_name_base + '2a', momentum = 0.01)(X)
     X = Activation('relu')(X)
 
     # Second component of main path (≈2 lines)(zero-padding)
-    X = Conv2D(filters = F2, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2b', kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
-    X = BatchNormalization(axis = 3, name = bn_name_base + '2b', momentum = 0.001)(X)
+    X = Conv2D(filters = F2, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2b', kernel_initializer = glorot_uniform(seed=0))(X)
+    X = BatchNormalization(axis = 3, name = bn_name_base + '2b', momentum = 0.01)(X)
 
     # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
     X = Add()([X, X_shortcut])
@@ -79,19 +80,19 @@ def convolutional_block(X, filters, stage, block, s = 2):
 
     ##### MAIN PATH #####
     # First component of main path (zero-padding)
-    X = Conv2D(F1, (3, 3), strides = (s,s), padding = 'same', name = conv_name_base + '2a', kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
-    X = BatchNormalization(axis = 3, name = bn_name_base + '2a', momentum = 0.001)(X)
+    X = Conv2D(F1, (3, 3), strides = (s,s), padding = 'same', name = conv_name_base + '2a', kernel_initializer = glorot_uniform(seed=0))(X)
+    X = BatchNormalization(axis = 3, name = bn_name_base + '2a', momentum = 0.01)(X)
     X = Activation('relu')(X)
 
     # Second component of main path (≈2 lines)(zero-padding)
-    X = Conv2D(filters = F2, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2b', kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
-    X = BatchNormalization(axis = 3, name = bn_name_base + '2b', momentum = 0.001)(X)
+    X = Conv2D(filters = F2, kernel_size = (3, 3), strides = (1,1), padding = 'same', name = conv_name_base + '2b', kernel_initializer = glorot_uniform(seed=0))(X)
+    X = BatchNormalization(axis = 3, name = bn_name_base + '2b', momentum = 0.01)(X)
 
 
     ##### SHORTCUT PATH #### (≈2 lines)(zero-padding)
     X_shortcut = Conv2D(filters = F2, kernel_size = (3, 3), strides = (s,s), padding = 'same', name = conv_name_base + '1',
-                        kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X_shortcut)
-    X_shortcut = BatchNormalization(axis = 3, name = bn_name_base + '1', momentum = 0.001)(X_shortcut)
+                        kernel_initializer = glorot_uniform(seed=0))(X_shortcut)
+    X_shortcut = BatchNormalization(axis = 3, name = bn_name_base + '1', momentum = 0.01)(X_shortcut)
 
     # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
     X = Add()([X, X_shortcut])
@@ -120,8 +121,8 @@ def ResNet18(input_shape=(64, 64, 3), classes=6):
     X = ZeroPadding2D((3, 3))(X_input)
 
     # Stage 1
-    X = Conv2D(64, (7, 7), strides=(2, 2), name='conv1', kernel_initializer=glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
-    X = BatchNormalization(axis=3, name='bn_conv1', momentum = 0.001)(X)
+    X = Conv2D(64, (7, 7), strides=(2, 2), name='conv1', kernel_initializer=glorot_uniform(seed=0))(X)
+    X = BatchNormalization(axis=3, name='bn_conv1', momentum = 0.01)(X)
     X = Activation('relu')(X)
     X = MaxPooling2D((3, 3), strides=(2, 2))(X)
 
@@ -155,7 +156,7 @@ def ResNet18(input_shape=(64, 64, 3), classes=6):
 
     # output layer
     X = Flatten()(X)
-    X = Dense(classes, activation='softmax', name='fc' + str(classes), kernel_initializer = glorot_uniform(seed=0), kernel_regularizer = keras.regularizers.l2(0.001))(X)
+    X = Dense(classes, activation='softmax', name='fc' + str(classes), kernel_initializer = glorot_uniform(seed=0))(X)
     
     
     # Create model
